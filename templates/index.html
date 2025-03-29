@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RL Options Trading System</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up-arrow"></i> RL Options Trader
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/training">Training</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/backtesting">Backtesting</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/model_docs">Model Documentation</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% if message %}
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+        
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+                        <h1 class="card-title text-center mb-4">Reinforcement Learning Options Trading System</h1>
+                        <p class="lead text-center">
+                            Advanced AI-powered trading for Nifty/Sensex options using Upstox API and Stable-Baselines3
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <div class="card h-100 border-0 shadow">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="bi bi-graph-up"></i> Live Trading
+                        </h4>
+                        <p class="card-text">
+                            Continuously collect and analyze live option chain data from the Upstox API.
+                            Monitor market conditions and execute trades based on reinforcement learning 
+                            model predictions.
+                        </p>
+                        {% if not auth_url %}
+                        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+                        {% else %}
+                        <div class="alert alert-warning mt-3" role="alert">
+                            <small><i class="bi bi-exclamation-triangle"></i> Upstox authentication required for real-time data</small>
+                        </div>
+                        <a href="/dashboard" class="btn btn-secondary">Go to Dashboard</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="bi bi-cpu"></i> Model Training
+                        </h4>
+                        <p class="card-text">
+                            Train on key factors like OHLC, volume, delta, gamma, theta, vega, and more
+                            using Proximal Policy Optimization (PPO) algorithm from Stable-Baselines3.
+                        </p>
+                        <a href="/training" class="btn btn-primary">Go to Training</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <div class="card h-100 border-0 shadow">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="bi bi-clock-history"></i> Backtesting
+                        </h4>
+                        <p class="card-text">
+                            Test trading strategies on historical data to evaluate performance.
+                            Analyze key metrics including returns, drawdowns, and win rates.
+                        </p>
+                        <a href="/backtesting" class="btn btn-primary">Go to Backtesting</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="bi bi-database"></i> Data Storage
+                        </h4>
+                        <p class="card-text">
+                            All market data, trades, and model states are stored in MongoDB for
+                            historical analysis and continuous model improvement.
+                        </p>
+                        <div class="text-center mt-4">
+                            <i class="bi bi-database-check" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="bi bi-key"></i> Upstox API Configuration
+                        </h4>
+                        
+                        <div class="alert alert-info" role="alert">
+                            <h5 class="alert-heading">Real-Time Market Data</h5>
+                            <p><strong>This system requires authentication with Upstox API for live market data access.</strong> All simulated data has been removed to ensure you get the most accurate trading signals.</p>
+                        </div>
+                        
+                        {% if auth_url %}
+                        <div class="alert alert-warning" role="alert">
+                            <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Authentication Required</h5>
+                            <p>You need to authorize this application with Upstox to access market data and place trades.</p>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <span class="badge bg-danger p-2">Not Authenticated</span>
+                                </div>
+                                <div>
+                                    <a href="{{ auth_url }}" class="btn btn-primary">
+                                        <i class="bi bi-key"></i> Authenticate with Upstox
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success" role="alert">
+                            <h5 class="alert-heading"><i class="bi bi-check-circle"></i> Authentication Status</h5>
+                            <p>Your application is authenticated with Upstox API and can access live market data.</p>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success p-2">Authenticated</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <form id="apiForm" class="mt-3">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="apiKey" class="form-label">API Key</label>
+                                    <input type="text" class="form-control" id="apiKey" placeholder="Your Upstox API Key">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="apiSecret" class="form-label">API Secret</label>
+                                    <input type="password" class="form-control" id="apiSecret" placeholder="Your Upstox API Secret">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="redirectUri" class="form-label">Redirect URI</label>
+                                <input type="text" class="form-control" id="redirectUri" value="{{ request.url_root | replace('http://', 'https://') }}upstox/callback" readonly>
+                                <div class="form-text">
+                                    Configure this exact URL in your Upstox API settings.
+                                    {% if config.UPSTOX_REDIRECT_URI %}
+                                    <br><strong>Current Configured URI:</strong> {{ config.UPSTOX_REDIRECT_URI }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <button type="button" id="setApiButton" class="btn btn-primary">Save API Credentials</button>
+                            <a href="/upstox/auth" class="btn btn-outline-secondary">Start OAuth Flow</a>
+                        </form>
+                        
+                        <div id="apiStatus" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+                        <h4 class="card-title">System Architecture</h4>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card card-body bg-dark">
+                                    <h5 class="card-title">Data Collection</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle"></i> Real-time option chain data</li>
+                                        <li><i class="bi bi-check-circle"></i> OHLC price data</li>
+                                        <li><i class="bi bi-check-circle"></i> Option greeks</li>
+                                        <li><i class="bi bi-check-circle"></i> Market indicators</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card card-body bg-dark">
+                                    <h5 class="card-title">RL Environment</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle"></i> Custom Gym environment</li>
+                                        <li><i class="bi bi-check-circle"></i> Realistic reward function</li>
+                                        <li><i class="bi bi-check-circle"></i> Trading fees & slippage</li>
+                                        <li><i class="bi bi-check-circle"></i> Position management</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card card-body bg-dark">
+                                    <h5 class="card-title">ML Pipeline</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle"></i> Stable-Baselines3 PPO</li>
+                                        <li><i class="bi bi-check-circle"></i> Continuous model updates</li>
+                                        <li><i class="bi bi-check-circle"></i> Performance metrics</li>
+                                        <li><i class="bi bi-check-circle"></i> MongoDB storage</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light mt-5 py-3">
+        <div class="container text-center">
+            <p class="mb-0">RL Options Trading System © 2023</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle API key form submission
+            const apiForm = document.getElementById('apiForm');
+            const setApiButton = document.getElementById('setApiButton');
+            const apiStatus = document.getElementById('apiStatus');
+            
+            setApiButton.addEventListener('click', function() {
+                const apiKey = document.getElementById('apiKey').value;
+                const apiSecret = document.getElementById('apiSecret').value;
+                const redirectUri = document.getElementById('redirectUri').value;
+                
+                // Check if at least one field is filled
+                if (!apiKey && !apiSecret && !redirectUri) {
+                    showStatus('error', 'Please enter at least API Key or API Secret');
+                    return;
+                }
+                
+                // Send API credentials to the server
+                fetch('/api/set_api_key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        api_secret: apiSecret,
+                        redirect_uri: redirectUri
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showStatus('success', data.message);
+                        
+                        // Check if OAuth flow is required
+                        if (data.requires_oauth && data.auth_url) {
+                            // Show OAuth button
+                            showOAuthButton(data.auth_url);
+                        }
+                    } else {
+                        showStatus('error', data.error || 'Failed to set API credentials');
+                    }
+                })
+                .catch(error => {
+                    showStatus('error', 'Error: ' + error.message);
+                });
+            });
+            
+            // Function to display status messages
+            function showStatus(type, message) {
+                apiStatus.innerHTML = `
+                    <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            }
+            
+            // Function to show OAuth button
+            function showOAuthButton(authUrl) {
+                apiStatus.innerHTML += `
+                    <div class="alert alert-info mt-3" role="alert">
+                        <p>Please authorize this application with Upstox:</p>
+                        <a href="${authUrl}" class="btn btn-primary">Authenticate with Upstox</a>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

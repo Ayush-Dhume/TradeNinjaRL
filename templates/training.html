@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training - RL Options Trading</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up-arrow"></i> RL Options Trader
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/training">Training</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/backtesting">Backtesting</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/model_docs">Model Documentation</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Training Controls -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-dark">
+                        <h5 class="mb-0">Training Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="trainingForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="timestepsInput" class="form-label">Training Timesteps</label>
+                                    <input type="number" class="form-control" id="timestepsInput" min="1000" max="10000000" value="100000">
+                                    <div class="form-text">Number of environment steps for training</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="learningRateInput" class="form-label">Learning Rate</label>
+                                    <input type="number" step="0.0001" min="0.0001" max="0.1" class="form-control" id="learningRateInput" value="0.0003">
+                                    <div class="form-text">Model learning rate</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 text-end">
+                                    <button type="button" class="btn btn-secondary me-2" id="resetModelBtn">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reset Model
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="startTrainingBtn">
+                                        <i class="bi bi-play-fill"></i> Start Training
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Training Progress -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Training Progress</h5>
+                        <div>
+                            <span class="badge bg-info me-2" id="trainingStatus">Idle</span>
+                            <button class="btn btn-sm btn-secondary" id="refreshMetricsBtn">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <div id="learningCurveContainer" style="height: 300px;">
+                                    <canvas id="learningCurveChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Mean Reward</h6>
+                                        <h4 id="meanReward">0.00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Steps</h6>
+                                        <h4 id="trainingSteps">0</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Success Rate</h6>
+                                        <h4 id="successRate">0%</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Training Time</h6>
+                                        <h4 id="trainingTime">0:00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Model Configuration -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-header bg-dark">
+                        <h5 class="mb-0">Model Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Algorithm</th>
+                                    <td>PPO (Proximal Policy Optimization)</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Policy Network</th>
+                                    <td>MlpPolicy (Multi-layer Perceptron)</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Discount Factor</th>
+                                    <td>0.99</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">GAE Lambda</th>
+                                    <td>0.95</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Clip Range</th>
+                                    <td>0.2</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Entropy Coefficient</th>
+                                    <td>0.01</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Value Function Coefficient</th>
+                                    <td>0.5</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-header bg-dark">
+                        <h5 class="mb-0">Training History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Steps</th>
+                                        <th>Mean Reward</th>
+                                        <th>Learning Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trainingHistoryBody">
+                                    {% if metrics %}
+                                        {% for metric in metrics %}
+                                        <tr>
+                                            <td>{{ metric.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>{{ metric.steps }}</td>
+                                            <td>{{ "{:.4f}".format(metric.mean_reward) }}</td>
+                                            <td>{{ "{:.6f}".format(metric.learning_rate) }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No training history</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light mt-5 py-3">
+        <div class="container text-center">
+            <p class="mb-0">RL Options Trading System © 2023</p>
+        </div>
+    </footer>
+
+    <!-- Training Status Modal -->
+    <div class="modal fade" id="trainingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Training In Progress</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <p class="text-center" id="trainingModalMessage">
+                        Training your reinforcement learning model. This may take some time...
+                    </p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="trainingProgressBar"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize learning curve chart
+            const learningCurveCtx = document.getElementById('learningCurveChart').getContext('2d');
+            const learningCurveChart = createLearningCurveChart(learningCurveCtx);
+            
+            // Start training button
+            document.getElementById('startTrainingBtn').addEventListener('click', function() {
+                const timesteps = document.getElementById('timestepsInput').value;
+                const learningRate = document.getElementById('learningRateInput').value;
+                
+                // Show modal
+                const trainingModal = new bootstrap.Modal(document.getElementById('trainingModal'));
+                trainingModal.show();
+                
+                // Update status
+                document.getElementById('trainingStatus').textContent = 'Training';
+                document.getElementById('trainingStatus').className = 'badge bg-warning me-2';
+                
+                // Call API to start training
+                fetch('/api/start_training', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        timesteps: parseInt(timesteps),
+                        learning_rate: parseFloat(learningRate)
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('trainingModalMessage').textContent = data.message;
+                        // Start polling for updates
+                        startMetricPolling(learningCurveChart);
+                    } else {
+                        document.getElementById('trainingModalMessage').textContent = "Error: " + data.error;
+                        document.getElementById('trainingStatus').textContent = 'Error';
+                        document.getElementById('trainingStatus').className = 'badge bg-danger me-2';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('trainingModalMessage').textContent = "Error starting training: " + error;
+                    document.getElementById('trainingStatus').textContent = 'Error';
+                    document.getElementById('trainingStatus').className = 'badge bg-danger me-2';
+                });
+            });
+            
+            // Refresh metrics button
+            document.getElementById('refreshMetricsBtn').addEventListener('click', function() {
+                fetchMetrics(learningCurveChart);
+            });
+            
+            // Reset model button
+            document.getElementById('resetModelBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset the model? All training progress will be lost.')) {
+                    // Logic to reset model would go here
+                    alert('Model reset functionality will be implemented in the future.');
+                }
+            });
+            
+            // Initialize with current metrics
+            fetchMetrics(learningCurveChart);
+        });
+        
+        function fetchMetrics(chart) {
+            fetch('/api/model_metrics?limit=100')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateMetricsDisplay(data.metrics, chart);
+                    }
+                })
+                .catch(error => console.error('Error fetching metrics:', error));
+        }
+        
+        function updateMetricsDisplay(metrics, chart) {
+            if (!metrics || metrics.length === 0) return;
+            
+            // Get the most recent metrics
+            const latestMetric = metrics[0];
+            
+            // Update the display elements
+            document.getElementById('meanReward').textContent = latestMetric.mean_reward.toFixed(2);
+            document.getElementById('trainingSteps').textContent = latestMetric.steps.toLocaleString();
+            
+            // Calculate success rate (this is a mock value - replace with actual calculation)
+            const successRate = Math.min(Math.max(latestMetric.mean_reward * 10, 0), 100);
+            document.getElementById('successRate').textContent = successRate.toFixed(0) + '%';
+            
+            // Update the chart
+            updateLearningCurveChart(chart, metrics);
+        }
+        
+        function startMetricPolling(chart) {
+            // Poll for metrics every 5 seconds
+            const intervalId = setInterval(() => {
+                fetchMetrics(chart);
+            }, 5000);
+            
+            // Stop polling after 10 minutes
+            setTimeout(() => {
+                clearInterval(intervalId);
+                document.getElementById('trainingStatus').textContent = 'Complete';
+                document.getElementById('trainingStatus').className = 'badge bg-success me-2';
+            }, 10 * 60 * 1000);
+        }
+    </script>
+</body>
+</html>

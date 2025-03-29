@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}RL Model Documentation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Model Architecture and Parameters</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Reinforcement Learning Configuration</h6>
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td>Algorithm</td>
+                                        <td>Proximal Policy Optimization (PPO)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Policy Network</td>
+                                        <td>Multi-layer perceptron (MLP) with 2 hidden layers</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Hidden Layer Sizes</td>
+                                        <td>[64, 64]</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Activation Function</td>
+                                        <td>ReLU</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Learning Rate</td>
+                                        <td>3e-4 (0.0003)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Discount Factor (γ)</td>
+                                        <td>0.99</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Clip Range</td>
+                                        <td>0.2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GAE Lambda</td>
+                                        <td>0.95</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Training Steps</td>
+                                        <td>100,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Batch Size</td>
+                                        <td>64</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Trading Environment Parameters</h6>
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td>Initial Capital</td>
+                                        <td>₹100,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Max Position Size</td>
+                                        <td>10 contracts</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Transaction Fee</td>
+                                        <td>0.05% per trade</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Risk Management</td>
+                                        <td>Stop loss: 5%, Take profit: 10%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Episode Length</td>
+                                        <td>250 steps (approx. 1 trading day)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Lookback Window</td>
+                                        <td>30 time periods</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Action Space</td>
+                                        <td>Discrete (Buy Call, Buy Put, Close, Hold)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Training Process</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h6 class="fw-bold">Training Pipeline</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <ol>
+                                        <li><strong>Data Collection:</strong> Market data is collected from Upstox API including price, volume, open interest, and Greeks.</li>
+                                        <li><strong>Feature Engineering:</strong> Raw data is transformed into features including price momentum, volatility indicators, time to expiry, and option Greeks.</li>
+                                        <li><strong>Environment Initialization:</strong> Trading environment is created with initial capital and trading parameters.</li>
+                                        <li><strong>Model Training:</strong> The PPO agent interacts with the environment for the specified number of time steps.</li>
+                                        <li><strong>Performance Evaluation:</strong> The model is evaluated on metrics like Sharpe ratio, maximum drawdown, and win rate.</li>
+                                        <li><strong>Model Persistence:</strong> Trained models are stored in the database with metadata for future use.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Reward Function</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p>The reward function is designed to incentivize profitable trading while managing risk. It consists of the following components:</p>
+                                    <ul>
+                                        <li><strong>Profit/Loss:</strong> Primary component based on trade PnL</li>
+                                        <li><strong>Risk Penalty:</strong> Penalties for excessive drawdowns or portfolio concentration</li>
+                                        <li><strong>Volatility Adjustment:</strong> Higher rewards for consistency in returns</li>
+                                        <li><strong>Time Decay Consideration:</strong> Special handling for option time decay effects</li>
+                                    </ul>
+                                    <p>Mathematically represented as:</p>
+                                    <code>R = PnL + alpha * RiskAdjustment + beta * VolatilityScore - gamma * TimeDecayEffect</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Model Optimization</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p>The model's hyperparameters are tuned through a systematic process:</p>
+                                    <ul>
+                                        <li><strong>Baseline Establishment:</strong> Initial performance benchmark</li>
+                                        <li><strong>Grid Search:</strong> Exploration of key hyperparameters</li>
+                                        <li><strong>Sensitivity Analysis:</strong> Identify most impactful parameters</li>
+                                        <li><strong>Fine-tuning:</strong> Further optimization of critical parameters</li>
+                                        <li><strong>Cross-validation:</strong> Evaluation on different market conditions</li>
+                                    </ul>
+                                    <p>Hyperparameters tuned include learning rate, network architecture, discount factor, and clip range.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Input Features and Data Processing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h6 class="fw-bold">Features from Upstox API</h6>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Feature Category</th>
+                                            <th>Features</th>
+                                            <th>Description</th>
+                                            <th>Preprocessing</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Price Data</td>
+                                            <td>OHLC, Last Price, Bid/Ask</td>
+                                            <td>Basic price information for options and underlying</td>
+                                            <td>Normalization, Log returns</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Volume & OI</td>
+                                            <td>Volume, Open Interest, OI Change</td>
+                                            <td>Liquidity and market participation indicators</td>
+                                            <td>Scaling, Rate of change</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Greeks</td>
+                                            <td>Delta, Gamma, Theta, Vega</td>
+                                            <td>Option sensitivity measures</td>
+                                            <td>Normalization</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Implied Volatility</td>
+                                            <td>IV, IV Skew, IV Term Structure</td>
+                                            <td>Market's expectation of future volatility</td>
+                                            <td>Normalization, Percentile ranking</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Contract Specifications</td>
+                                            <td>Strike Price, Expiry, Contract Type</td>
+                                            <td>Option contract details</td>
+                                            <td>One-hot encoding, Distance to strike normalization</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Technical Indicators</td>
+                                            <td>RSI, MACD, Bollinger Bands</td>
+                                            <td>Derivative technical indicators</td>
+                                            <td>Standardization, Signal extraction</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Time Features</td>
+                                            <td>Time to Expiry, Session Time</td>
+                                            <td>Temporal aspects of options and market</td>
+                                            <td>Decay function transformation, Cyclical encoding</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Feature Engineering</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p>Additional derived features to enhance model performance:</p>
+                                    <ul>
+                                        <li><strong>Put-Call Ratio:</strong> Market sentiment indicator</li>
+                                        <li><strong>Delta-Adjusted Spread:</strong> Risk-adjusted price spreads</li>
+                                        <li><strong>Volatility Surface Features:</strong> 3D volatility structure</li>
+                                        <li><strong>Gamma Exposure:</strong> Market maker hedging pressure</li>
+                                        <li><strong>Time-series Momentum:</strong> Multi-timeframe momentum signals</li>
+                                        <li><strong>Liquidity Metrics:</strong> Bid-ask spread, Market depth signals</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Data Pipeline</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p>The data processing pipeline includes:</p>
+                                    <ul>
+                                        <li><strong>Data Collection:</strong> Real-time and historical data from Upstox</li>
+                                        <li><strong>Cleaning:</strong> Handling missing values, outliers, and stale prices</li>
+                                        <li><strong>Feature Extraction:</strong> Calculation of primary and derived features</li>
+                                        <li><strong>Normalization:</strong> Standardization to mean 0, standard deviation 1</li>
+                                        <li><strong>Feature Selection:</strong> Identification of most predictive features</li>
+                                        <li><strong>Temporal Formatting:</strong> Structuring for time-series input to the model</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight current page in navigation
+        document.querySelector('a[href="/model_docs"]').classList.add('active');
+    });
+</script>
+{% endblock %}

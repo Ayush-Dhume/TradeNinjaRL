@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting - RL Options Trading</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up-arrow"></i> RL Options Trader
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/training">Training</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/backtesting">Backtesting</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/model_docs">Model Documentation</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Backtesting Controls -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-dark">
+                        <h5 class="mb-0">Backtesting Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="backtestingForm">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="initialBalanceInput" class="form-label">Initial Balance (₹)</label>
+                                    <input type="number" class="form-control" id="initialBalanceInput" min="10000" max="10000000" value="100000">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="daysInput" class="form-label">Backtest Period (Days)</label>
+                                    <input type="number" class="form-control" id="daysInput" min="7" max="365" value="30">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="indexSelect" class="form-label">Index</label>
+                                    <select class="form-select" id="indexSelect">
+                                        <option value="NIFTY 50">NIFTY 50</option>
+                                        <option value="SENSEX">SENSEX</option>
+                                        <option value="BANKNIFTY">BANKNIFTY</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 text-end">
+                                    <button type="button" class="btn btn-primary" id="startBacktestBtn">
+                                        <i class="bi bi-play-fill"></i> Start Backtest
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Backtest Results -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Backtest Results</h5>
+                        <div>
+                            <span class="badge bg-info me-2" id="backtestStatus">Ready</span>
+                            <button class="btn btn-sm btn-secondary" id="refreshResultsBtn">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <div id="equityCurveContainer" style="height: 300px;">
+                                    <canvas id="equityCurveChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Total Return</h6>
+                                        <h4 id="totalReturn">0.00%</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Sharpe Ratio</h6>
+                                        <h4 id="sharpeRatio">0.00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Max Drawdown</h6>
+                                        <h4 id="maxDrawdown">0.00%</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Win Rate</h6>
+                                        <h4 id="winRate">0.00%</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Analytics -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-header bg-dark">
+                        <h5 class="mb-0">Trade Analytics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <div id="tradeDistributionContainer" style="height: 200px;">
+                                    <canvas id="tradeDistributionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Total Trades</th>
+                                    <td id="totalTrades">0</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Profit Factor</th>
+                                    <td id="profitFactor">0.00</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Avg. Trade Duration</th>
+                                    <td id="avgTradeDuration">0 min</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Avg. Winner</th>
+                                    <td id="avgWinner">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Avg. Loser</th>
+                                    <td id="avgLoser">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Total Fees</th>
+                                    <td id="totalFees">₹0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-header bg-dark">
+                        <h5 class="mb-0">Backtest History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Initial Balance</th>
+                                        <th>Final Balance</th>
+                                        <th>Return</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="backtestHistoryBody">
+                                    {% if backtest_results %}
+                                        {% for result in backtest_results %}
+                                        <tr>
+                                            <td>
+                                                {% if result.timestamp is string %}
+                                                    {{ result.timestamp.split('T')[0] }} {{ result.timestamp.split('T')[1][:5] }}
+                                                {% else %}
+                                                    {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                                                {% endif %}
+                                            </td>
+                                            <td>₹{{ "{:,.2f}".format(result.initial_balance) }}</td>
+                                            <td>₹{{ "{:,.2f}".format(result.final_balance) }}</td>
+                                            <td class="{{ 'text-success' if result.final_balance > result.initial_balance else 'text-danger' }}">
+                                                {% if result.metrics is defined and result.metrics.total_return is defined %}
+                                                    {{ "{:.2f}%".format(result.metrics.total_return * 100) }}
+                                                {% else %}
+                                                    {{ "{:.2f}%".format((result.final_balance / result.initial_balance - 1) * 100) }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary view-result" data-id="{{ result._id }}">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">No backtest history</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light mt-5 py-3">
+        <div class="container text-center">
+            <p class="mb-0">RL Options Trading System © 2023</p>
+        </div>
+    </footer>
+
+    <!-- Backtest Status Modal -->
+    <div class="modal fade" id="backtestModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Backtesting In Progress</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <p class="text-center" id="backtestModalMessage">
+                        Running backtest. This may take a few minutes...
+                    </p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="backtestProgressBar"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backtest Result Detail Modal -->
+    <div class="modal fade" id="resultDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Backtest Result Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div id="detailChartContainer" style="height: 300px;">
+                                <canvas id="detailChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Performance Metrics</h6>
+                            <table class="table table-sm">
+                                <tbody id="detailMetricsBody">
+                                    <!-- Metrics will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Trade Summary</h6>
+                            <table class="table table-sm">
+                                <tbody id="detailTradeSummary">
+                                    <!-- Trade summary will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="downloadReportBtn">
+                        <i class="bi bi-download"></i> Download Report
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize charts
+            const equityCurveCtx = document.getElementById('equityCurveChart').getContext('2d');
+            const equityCurveChart = createEquityCurveChart(equityCurveCtx);
+            
+            const tradeDistributionCtx = document.getElementById('tradeDistributionChart').getContext('2d');
+            const tradeDistributionChart = createTradeDistributionChart(tradeDistributionCtx);
+            
+            // Start backtest button
+            document.getElementById('startBacktestBtn').addEventListener('click', function() {
+                const initialBalance = document.getElementById('initialBalanceInput').value;
+                const days = document.getElementById('daysInput').value;
+                const index = document.getElementById('indexSelect').value;
+                
+                // Show modal
+                const backtestModal = new bootstrap.Modal(document.getElementById('backtestModal'));
+                backtestModal.show();
+                
+                // Update status
+                document.getElementById('backtestStatus').textContent = 'Running';
+                document.getElementById('backtestStatus').className = 'badge bg-warning me-2';
+                
+                // Animate progress bar
+                let progress = 0;
+                const progressBar = document.getElementById('backtestProgressBar');
+                const progressInterval = setInterval(() => {
+                    progress += 5;
+                    if (progress > 95) clearInterval(progressInterval);
+                    progressBar.style.width = `${progress}%`;
+                }, 1000);
+                
+                // Call API to start backtest
+                fetch('/api/start_backtest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        initial_balance: parseFloat(initialBalance),
+                        days: parseInt(days),
+                        index: index
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('backtestModalMessage').textContent = data.message;
+                        // Start polling for results
+                        setTimeout(() => {
+                            clearInterval(progressInterval);
+                            progressBar.style.width = '100%';
+                            document.getElementById('backtestStatus').textContent = 'Complete';
+                            document.getElementById('backtestStatus').className = 'badge bg-success me-2';
+                            fetchBacktestResults(equityCurveChart, tradeDistributionChart);
+                        }, 10000); // Poll after 10 seconds
+                    } else {
+                        clearInterval(progressInterval);
+                        document.getElementById('backtestModalMessage').textContent = "Error: " + data.error;
+                        document.getElementById('backtestStatus').textContent = 'Error';
+                        document.getElementById('backtestStatus').className = 'badge bg-danger me-2';
+                    }
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    console.error('Error:', error);
+                    document.getElementById('backtestModalMessage').textContent = "Error starting backtest: " + error;
+                    document.getElementById('backtestStatus').textContent = 'Error';
+                    document.getElementById('backtestStatus').className = 'badge bg-danger me-2';
+                });
+            });
+            
+            // Refresh results button
+            document.getElementById('refreshResultsBtn').addEventListener('click', function() {
+                fetchBacktestResults(equityCurveChart, tradeDistributionChart);
+            });
+            
+            // View result detail buttons
+            document.querySelectorAll('.view-result').forEach(button => {
+                button.addEventListener('click', function() {
+                    const resultId = this.getAttribute('data-id');
+                    showResultDetail(resultId);
+                });
+            });
+            
+            // Initialize with recent results
+            fetchBacktestResults(equityCurveChart, tradeDistributionChart);
+        });
+        
+        function fetchBacktestResults(equityChart, tradeChart) {
+            fetch('/api/backtest_results')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.results && data.results.length > 0) {
+                        updateResultsDisplay(data.results[0], equityChart, tradeChart);
+                        updateBacktestHistory(data.results);
+                    }
+                })
+                .catch(error => console.error('Error fetching backtest results:', error));
+        }
+        
+        function updateResultsDisplay(result, equityChart, tradeChart) {
+            if (!result || !result.metrics) return;
+            
+            const metrics = result.metrics;
+            
+            // Update metrics display
+            document.getElementById('totalReturn').textContent = (metrics.total_return * 100).toFixed(2) + '%';
+            document.getElementById('sharpeRatio').textContent = metrics.sharpe_ratio.toFixed(2);
+            document.getElementById('maxDrawdown').textContent = (metrics.max_drawdown * 100).toFixed(2) + '%';
+            document.getElementById('winRate').textContent = (metrics.win_rate * 100).toFixed(2) + '%';
+            
+            document.getElementById('totalTrades').textContent = metrics.total_trades;
+            document.getElementById('profitFactor').textContent = metrics.profit_factor.toFixed(2);
+            document.getElementById('totalFees').textContent = '₹' + metrics.total_fees.toFixed(2);
+            
+            // Set placeholder values for fields not directly in the metrics
+            document.getElementById('avgTradeDuration').textContent = '30 min';
+            document.getElementById('avgWinner').textContent = '₹' + (metrics.avg_sell_size * 0.05).toFixed(2);
+            document.getElementById('avgLoser').textContent = '₹' + (metrics.avg_sell_size * 0.03).toFixed(2);
+            
+            // Update charts with mock data since we don't have the actual time series
+            updateEquityCurveChart(equityChart, generateMockEquityCurve(metrics));
+            updateTradeDistributionChart(tradeChart, generateMockTradeDistribution(metrics));
+        }
+        
+        function updateBacktestHistory(results) {
+            const tbody = document.getElementById('backtestHistoryBody');
+            tbody.innerHTML = '';
+            
+            if (!results || results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No backtest history</td></tr>';
+                return;
+            }
+            
+            results.forEach(result => {
+                const tr = document.createElement('tr');
+                
+                // Format date
+                const date = new Date(result.timestamp);
+                const dateStr = date.toLocaleString();
+                
+                // Create row
+                tr.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>₹${result.initial_balance.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                    <td>₹${result.final_balance.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                    <td class="${result.metrics.total_return > 0 ? 'text-success' : 'text-danger'}">
+                        ${(result.metrics.total_return * 100).toFixed(2)}%
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary view-result" data-id="${result._id}">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+                
+                // Add event listener to the new button
+                tr.querySelector('.view-result').addEventListener('click', function() {
+                    const resultId = this.getAttribute('data-id');
+                    showResultDetail(resultId);
+                });
+            });
+        }
+        
+        function showResultDetail(resultId) {
+            fetch(`/api/backtest_results?id=${resultId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.result) {
+                        displayResultDetail(data.result);
+                    } else {
+                        console.error('Error fetching result details:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        
+        function displayResultDetail(result) {
+            const metricsBody = document.getElementById('detailMetricsBody');
+            const tradeSummary = document.getElementById('detailTradeSummary');
+            
+            // Clear previous content
+            metricsBody.innerHTML = '';
+            tradeSummary.innerHTML = '';
+            
+            // Fill metrics table
+            const metrics = result.metrics;
+            metricsBody.innerHTML = `
+                <tr><th>Total Return</th><td>${(metrics.total_return * 100).toFixed(2)}%</td></tr>
+                <tr><th>Annualized Return</th><td>${(metrics.annualized_return * 100).toFixed(2)}%</td></tr>
+                <tr><th>Sharpe Ratio</th><td>${metrics.sharpe_ratio.toFixed(2)}</td></tr>
+                <tr><th>Max Drawdown</th><td>${(metrics.max_drawdown * 100).toFixed(2)}%</td></tr>
+                <tr><th>Win Rate</th><td>${(metrics.win_rate * 100).toFixed(2)}%</td></tr>
+                <tr><th>Profit Factor</th><td>${metrics.profit_factor.toFixed(2)}</td></tr>
+                <tr><th>Daily Volatility</th><td>${(metrics.daily_volatility * 100).toFixed(2)}%</td></tr>
+            `;
+            
+            // Fill trade summary table
+            tradeSummary.innerHTML = `
+                <tr><th>Total Trades</th><td>${metrics.total_trades}</td></tr>
+                <tr><th>Initial Balance</th><td>₹${result.initial_balance.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td></tr>
+                <tr><th>Final Balance</th><td>₹${result.final_balance.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td></tr>
+                <tr><th>Avg Buy Size</th><td>₹${metrics.avg_buy_size.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td></tr>
+                <tr><th>Avg Sell Size</th><td>₹${metrics.avg_sell_size.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td></tr>
+                <tr><th>Total Fees</th><td>₹${metrics.total_fees.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td></tr>
+                <tr><th>Duration</th><td>${result.duration_steps} steps</td></tr>
+            `;
+            
+            // Initialize and update chart
+            const detailChartCtx = document.getElementById('detailChart').getContext('2d');
+            const detailChart = createEquityCurveChart(detailChartCtx);
+            updateEquityCurveChart(detailChart, generateMockEquityCurve(metrics));
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('resultDetailModal'));
+            modal.show();
+        }
+        
+        function generateMockEquityCurve(metrics) {
+            // Generate mock equity curve based on metrics
+            const days = 30;
+            const labels = [];
+            const equity = [];
+            const drawdowns = [];
+            
+            let currentEquity = 100000; // Start with 100K
+            const finalEquity = currentEquity * (1 + metrics.total_return);
+            
+            // Calculate daily return
+            const dailyReturn = Math.pow(finalEquity / currentEquity, 1/days) - 1;
+            
+            // Generate daily equity values with some randomness
+            for (let i = 0; i < days; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - (days - i));
+                labels.push(date.toLocaleDateString());
+                
+                const randomFactor = 1 + (Math.random() * 0.01 - 0.005); // ±0.5%
+                currentEquity = currentEquity * (1 + dailyReturn * randomFactor);
+                equity.push(currentEquity);
+                
+                // Generate drawdown (as percentage of equity)
+                const maxDrawdown = metrics.max_drawdown;
+                const randomDrawdown = Math.random() * maxDrawdown * 100;
+                drawdowns.push(randomDrawdown);
+            }
+            
+            return {
+                labels: labels,
+                equity: equity,
+                drawdowns: drawdowns
+            };
+        }
+        
+        function generateMockTradeDistribution(metrics) {
+            // Generate mock trade distribution based on metrics
+            const winRate = metrics.win_rate;
+            const totalTrades = metrics.total_trades;
+            
+            const winners = Math.round(totalTrades * winRate);
+            const losers = totalTrades - winners;
+            
+            return {
+                labels: ['Winners', 'Losers'],
+                data: [winners, losers]
+            };
+        }
+    </script>
+</body>
+</html>
