@@ -1,0 +1,13 @@
+email-validator>=2.2.0
+flask>=3.1.0
+flask-sqlalchemy>=3.1.1
+gunicorn>=23.0.0
+matplotlib>=3.10.1
+numpy>=2.2.4
+pandas>=2.2.3
+psycopg2-binary>=2.9.10
+pymongo>=4.11.3
+requests>=2.32.3
+scipy>=1.15.2
+seaborn>=0.13.2
+sqlalchemy>=2.0.40
