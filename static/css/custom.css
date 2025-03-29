@@ -1,0 +1,116 @@
+/**
+ * Custom styles for RL Options Trading System
+ * Minimal custom styles to complement Bootstrap dark theme
+ */
+
+/* General styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+footer {
+    margin-top: auto;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+}
+
+/* Dashboard option chain styling */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table-active {
+    background-color: rgba(var(--bs-info-rgb), 0.2) !important;
+}
+
+/* Make tables more compact on small screens */
+@media (max-width: 768px) {
+    .table-sm td, .table-sm th {
+        padding: 0.25rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Custom badge styling for market status */
+.badge {
+    padding: 0.5em 0.75em;
+}
+
+/* Data visualization enhancements */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Progress bar animations */
+.progress-bar-animated {
+    animation-duration: 1.5s;
+}
+
+/* Card stat counters */
+.stat-card {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.stat-card .card-title {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.stat-card h4 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+/* Trading controls custom styling */
+.form-switch {
+    padding-left: 3em;
+}
+
+.form-switch .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+}
+
+/* Helper classes */
+.text-success {
+    color: var(--bs-success) !important;
+}
+
+.text-danger {
+    color: var(--bs-danger) !important;
+}
+
+.bg-dark {
+    background-color: var(--bs-dark) !important;
+}
+
+/* Tables */
+.table {
+    color: var(--bs-body-color);
+    border-color: var(--bs-dark);
+}
+
+.table > :not(caption) > * > * {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Result detail modal */
+#detailMetricsBody th,
+#detailTradeSummary th {
+    width: 40%;
+}
